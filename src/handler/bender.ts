@@ -78,13 +78,12 @@ async function handleRegisterCommand(context: HandlerContext) {
     },
   } = context;
   const { domain } = params;
-  const baseUrl = "https://ens.steer.fun/";
 
   if (!domain) {
     context.reply("Missing required parameters. Please provide domain.");
     return;
   }
-  let url_ens = baseUrl + "frames/manage?name=" + domain;
+  let url_ens = "https://ens.steer.fun/frames/manage?name=" + domain;
   context.send(`${url_ens}`);
 }
 
@@ -101,6 +100,12 @@ async function handleInfoCommand(context: HandlerContext) {
     },
   } = context;
   const { domain } = params;
+
+  if (!domain) {
+    context.reply("Missing required parameters. Please provide domain.");
+    return;
+  }
+
   const response = await fetch(`https://ensdata.net/${domain}`);
   const data: EnsData = (await response.json()) as EnsData;
   //@ts-ignore
@@ -135,7 +140,7 @@ async function handleCheckCommand(context: HandlerContext) {
   const { domain } = params;
 
   if (!domain) {
-    context.reply("Please provide a domain name to check.");
+    context.reply("Missing required parameters. Please provide domain.");
     return;
   }
 
@@ -165,6 +170,11 @@ async function handleBidCommand(context: HandlerContext) {
     },
   } = context;
   const { project, amount } = params;
+
+  if (!project || !amount) {
+    context.reply("Missing required parameters. Please provide project and amount.");
+    return;
+  }
   context.send(`Bid placed on project ${project} with amount ${amount}.`);
 }
 
@@ -175,6 +185,11 @@ async function handleVerifyCommand(context: HandlerContext) {
     },
   } = context;
   const { github_link } = params;
+
+  if (!github_link) {
+    context.reply("Missing required parameters. Please provide GitHub link.");
+    return;
+  }
   context.send(`Verifying project with GitHub link: ${github_link}`);
 }
 
@@ -197,6 +212,11 @@ async function handleTipCommand(context: HandlerContext) {
     },
   } = context;
   const { amount } = params;
+
+  if (!amount) {
+    context.reply("Missing required parameters. Please provide amount.");
+    return;
+  }
   context.send(`Tip of ${amount} sent.`);
 }
 
