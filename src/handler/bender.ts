@@ -121,104 +121,45 @@ export async function handleCommand(context: HandlerContext) {
       return handleAsk(context);
 
     case "register":
-      return handleRegisterCommand(context);
+      return handleRegister(context);
 
     case "help":
-      return handleHelpCommand(context);
+      return handleHelp(context);
 
     case "info":
-      return handleInfoCommand(context);
+      return handleInfo(context);
 
     case "check":
-      return handleCheckCommand(context);
+      return handleCheck(context);
 
     case "start":
-      return handleStartCommand(context);
+      return handleStart(context);
 
     case "bid":
-      return handleBidCommand(context);
+      return handleBid(context);
 
     case "verify":
-      return handleVerifyCommand(context);
+      return handleVerify(context);
 
     case "gm":
-      return handleGmCommand(context);
+      return handleGm(context);
 
     case "collage":
-      return handleCollageCommand(context);
+      return handleCollage(context);
 
     case "bender":
-      return handleBenderCommand(context);
+      return handleBender(context);
 
     case "tip":
-      return handleTipCommand(context);
+      return handleTip(context);
 
     default:
       context.reply("Unknown command. Please use /help to see the list of available commands.");
   }
 }
 
-async function handleRegisterCommand(context: HandlerContext) {
-  const {
-    message: {
-      content: { params },
-    },
-  } = context;
-  const { domain } = params;
 
-  if (!domain) {
-    context.reply("Missing required parameters. Please provide domain.");
-    return;
-  }
-  let url_ens = "https://ens.steer.fun/frames/manage?name=" + domain;
-  context.send(`${url_ens}`);
-}
-
-async function handleHelpCommand(context: HandlerContext) {
-  context.send(
-    "Here is the list of commands:\n/register [domain]: Register a domain.\n/info [domain]: Get information about a domain.\n/check [domain]: Check if a domain is available.\n/help: Show the list of commands"
-  );
-}
-
-async function handleInfoCommand(context: HandlerContext) {
-  const {
-    message: {
-      content: { params },
-    },
-  } = context;
-  const { domain } = params;
-
-  if (!domain) {
-    context.reply("Missing required parameters. Please provide domain.");
-    return;
-  }
-
-  const response = await fetch(`https://ensdata.net/${domain}`);
-  const data: EnsData = (await response.json()) as EnsData;
-  //@ts-ignore
-  const formattedData = {
-    Address: data?.address,
-    "Avatar URL": data?.avatar_url,
-    Description: data?.description,
-    ENS: data?.ens,
-    "Primary ENS": data?.ens_primary,
-    GitHub: data?.github,
-    "Resolver address": data?.resolverAddress,
-    Twitter: data?.twitter,
-    URL: `https://app.ens.domains/${domain}`,
-  };
-
-  let message = "Domain information:\n\n";
-  for (const [key, value] of Object.entries(formattedData)) {
-    if (value) {
-      message += `${key}: ${value}\n`;
-    }
-  }
-
-  context.send(message);
-}
-
-async function handleCheckCommand(context: HandlerContext) {
+export async function handleCheck(context: HandlerContext) {
   const {
     message: {
       content: { params },
@@ -246,11 +187,8 @@ async function handleCheckCommand(context: HandlerContext) {
   }
 }
 
-async function handleStartCommand(context: HandlerContext) {
-  context.send("Welcome! Please provide your wallet address to start.");
-}
 
-async function handleBidCommand(context: HandlerContext) {
+export async function handleBid(context: HandlerContext) {
   const {
     message: {
       content: { params },
@@ -265,7 +203,7 @@ async function handleBidCommand(context: HandlerContext) {
   context.send(`Bid placed on project ${project} with amount ${amount}.`);
 }
 
-async function handleVerifyCommand(context: HandlerContext) {
+export async function handleVerify(context: HandlerContext) {
   const {
     message: {
       content: { params },
@@ -278,33 +216,6 @@ async function handleVerifyCommand(context: HandlerContext) {
     return;
   }
   context.send(`Verifying project with GitHub link: ${github_link}`);
-}
-
-async function handleGmCommand(context: HandlerContext) {
-  context.send("Good morning! ☀️");
-}
-
-async function handleCollageCommand(context: HandlerContext) {
-  context.send("Generating a photo collage...");
-}
-
-async function handleBenderCommand(context: HandlerContext) {
-  context.send("Bending in progress...");
-}
-
-async function handleTipCommand(context: HandlerContext) {
-  const {
-    message: {
-      content: { params },
-    },
-  } = context;
-  const { amount } = params;
-
-  if (!amount) {
-    context.reply("Missing required parameters. Please provide amount.");
-    return;
-  }
-  context.send(`Tip of ${amount} sent.`);
 }
 
 export async function benderAgent(context: HandlerContext) {
@@ -438,15 +349,11 @@ export async function handleInfo(context: HandlerContext) {
   context.send(message);
 }
 
-export async function handleBid(context: HandlerContext) {
-  const {
-    message: {
-      content: { params },
-    },
-  } = context;
-  const { project, amount } = params;
-  // Implement the logic for placing a bid
-  context.send(`Bid placed on project ${project} with amount ${amount}.`);
+
+interface WalletResponse {
+  wallet_id?: string;
+  wallet_address?: string;
+  error?: string;
 }
 
 export async function handleRegister(context: HandlerContext) {
@@ -455,27 +362,60 @@ export async function handleRegister(context: HandlerContext) {
       content: { params },
     },
   } = context;
-  const { domain } = params;
 
-  if (!domain) {
-    context.reply("Missing required parameters. Please provide domain.");
+  const { project } = params; // Change to match the command configuration
+
+  // Check if project is provided
+  if (!project) {
+    context.reply("Missing required parameters. Please provide a project name.");
     return;
   }
-  const baseUrl = "https://ens.steer.fun/";
-  let url_ens = baseUrl + "frames/manage?name=" + domain;
-  context.send(`${url_ens}`);
+
+  console.log(project);
+
+  try {
+    // Call the backend to register the project and get the wallet info
+    const response = await fetch(`${BACKEND_URL}/register-project`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({ project }),
+    });
+
+    if (!response.ok) {
+      console.error(`Error: ${response.statusText}`);
+      context.reply(`Error: ${response.statusText}`);
+      return;
+    }
+
+    const data = (await response.json()) as WalletResponse;
+
+    if (data.wallet_id && data.wallet_address) {
+      context.send(
+        `Project "${project}" registered successfully!\n` +
+        `Wallet ID: ${data.wallet_id}\n` +
+        `Wallet Address: ${data.wallet_address}`
+      );
+    } else if (data.error) {
+      console.error("Error from /register-project:", data.error);
+      context.reply(`Error: ${data.error}`);
+    } else {
+      console.error("Unexpected response format:", data);
+      context.reply("Error: Unexpected response format");
+    }
+  } catch (err) {
+    if (err instanceof Error) {
+      console.error("Request failed:", err.message);
+      context.reply(`Error: ${err.message}`);
+    } else {
+      console.error("Unknown error occurred:", err);
+      context.reply("Error: An unknown error occurred");
+    }
+  }
 }
 
-export async function handleVerify(context: HandlerContext) {
-  const {
-    message: {
-      content: { params },
-    },
-  } = context;
-  const { github_link } = params;
-  // Implement the logic for verifying a project
-  context.send(`Verifying project with GitHub link: ${github_link}`);
-}
+
 
 export async function handleGm(context: HandlerContext) {
   // Implement the logic for sending a good morning picture
@@ -499,6 +439,10 @@ export async function handleTip(context: HandlerContext) {
     },
   } = context;
   const { amount } = params;
-  // Implement the logic for sending a tip
+
+  if (!amount) {
+    context.reply("Missing required parameters. Please provide amount.");
+    return;
+  }
   context.send(`Tip of ${amount} sent.`);
 }

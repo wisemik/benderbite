@@ -2,7 +2,7 @@ import type { CommandGroup } from "@xmtp/message-kit";
 import { handleCommand, handleAsk, handleInfo, 
   handleBid, handleRegister, handleVerify,
    handleGm, handleCollage, handleBender,
-    handleTip, handleStart } from "./handler/bender.js";
+    handleTip, handleStart, handleCheck } from "./handler/bender.js";
 
 export const commands: CommandGroup[] = [
   {
@@ -113,6 +113,16 @@ export const commands: CommandGroup[] = [
         params: {
           amount: {
             type: "number",
+          },
+        },
+      },
+      {
+        command: "/check",
+        handler: handleCheck, // Add appropriate handler
+        description: "Check the status of a project.",
+        params: {
+          project: {
+            type: "string",
           },
         },
       },
