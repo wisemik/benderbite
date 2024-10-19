@@ -1,8 +1,22 @@
 import { run, HandlerContext } from "@xmtp/message-kit";
+import { handleCommand, benderAgent } from "./handler/bender.js";
 
 run(async (context: HandlerContext) => {
-  // Get the message and the address from the sender
-  const { content, sender } = context.message;
-  // To reply, just call `reply` on the HandlerContext.
-  await context.send(`gm`);
+  const {
+    message: {
+      typeId,
+      content: { content: text, command, params },
+    },
+    group,
+  } = context;
+  if (group) return;
+  if (typeId !== "text") return;
+  if (text.startsWith("/")) {
+    await handleCommand(context);
+    // if (response) {
+    //   await context.send(response);
+    // }
+    return;
+  }
+  await benderAgent(context);
 });
