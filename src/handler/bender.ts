@@ -21,6 +21,93 @@ interface EnsData {
   };
 }
 
+const BACKEND_URL = process.env.BACKEND_URL
+
+interface LLMResponse {
+  answer?: string;
+  error?: string;
+}
+
+async function askLLM(question: string): Promise<string> {
+  try {
+    const response = await fetch(`${BACKEND_URL}/ask-llm`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({ question }),
+    });
+
+    if (!response.ok) {
+      console.error(`Error: ${response.statusText}`);
+      return `Error: ${response.statusText}`;
+    }
+
+    // Explicitly cast the response to the expected type
+    const data = (await response.json()) as LLMResponse;
+
+    if (data.answer) {
+      console.log("Response from /ask-llm:", data.answer);
+      return data.answer;
+    } else if (data.error) {
+      console.error("Error from /ask-llm:", data.error);
+      return `Error: ${data.error}`;
+    } else {
+      console.error("Unexpected response format:", data);
+      return "Error: Unexpected response format";
+    }
+  } catch (err) {
+    if (err instanceof Error) {
+      console.error("Request failed:", err.message);
+      return `Error: ${err.message}`;
+    } else {
+      console.error("Unknown error occurred:", err);
+      return "Error: An unknown error occurred";
+    }
+  }
+}
+
+async function askLLMWithContext(question: string): Promise<string> {
+  try {
+    const response = await fetch(`${BACKEND_URL}/ask-llm-with-context`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({ question }),
+    });
+
+    if (!response.ok) {
+      console.error(`Error: ${response.statusText}`);
+      return `Error: ${response.statusText}`;
+    }
+
+    // Explicitly cast the response to the expected type
+    const data = (await response.json()) as LLMResponse;
+
+    if (data.answer) {
+      console.log("Response from /ask-llm-with-context:", data.answer);
+      return data.answer;
+    } else if (data.error) {
+      console.error("Error from /ask-llm-with-context:", data.error);
+      return `Error: ${data.error}`;
+    } else {
+      console.error("Unexpected response format:", data);
+      return "Error: Unexpected response format";
+    }
+  } catch (err) {
+    if (err instanceof Error) {
+      console.error("Request failed:", err.message);
+      return `Error: ${err.message}`;
+    } else {
+      console.error("Unknown error occurred:", err);
+      return "Error: An unknown error occurred";
+    }
+  }
+}
+
+
+
 
 export async function handleCommand(context: HandlerContext) {
   const {
@@ -314,6 +401,9 @@ export async function handleAsk(context: HandlerContext) {
   const { question } = params;
   console.log(question);
   // Add logic to process the question
+  const message = await askLLM(question);
+  context.send(message);
+
 }
 
 export async function handleInfo(context: HandlerContext) {
