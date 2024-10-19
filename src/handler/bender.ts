@@ -123,6 +123,9 @@ export async function handleCommand(context: HandlerContext) {
     case "register":
       return handleRegister(context);
 
+    case "ens":  // New /ens command
+      return handleEns(context);
+
     case "help":
       return handleHelp(context);
 
@@ -158,6 +161,69 @@ export async function handleCommand(context: HandlerContext) {
   }
 }
 
+interface EnsResponse {
+  execution_result?: string;
+  error?: string;
+}
+
+// Helper function to call the backend /generate-ens API
+async function generateENS(name: string, address: string): Promise<string> {
+  try {
+    const response = await fetch(`${BACKEND_URL}/generate-ens`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({ name, address }),
+    });
+
+    if (!response.ok) {
+      console.error(`Error: ${response.statusText}`);
+      return `Error: ${response.statusText}`;
+    }
+
+    const data = (await response.json()) as EnsResponse;
+
+    if (data.execution_result) {
+      console.log("Response from /generate-ens:", data.execution_result);
+      return `ENS generation successful: ${data.execution_result}`;
+    } else if (data.error) {
+      console.error("Error from /generate-ens:", data.error);
+      return `Error: ${data.error}`;
+    } else {
+      console.error("Unexpected response format:", data);
+      return "Error: Unexpected response format";
+    }
+  } catch (err) {
+    if (err instanceof Error) {
+      console.error("Request failed:", err.message);
+      return `Error: ${err.message}`;
+    } else {
+      console.error("Unknown error occurred:", err);
+      return "Error: An unknown error occurred";
+    }
+  }
+}
+
+
+// New handler for the /ens command
+export async function handleEns(context: HandlerContext) {
+  const {
+    message: {
+      content: { params },
+    },
+  } = context;
+
+  const { name, token } = params;
+
+  if (!name || !token) {
+    context.reply("Missing required parameters. Please provide both name and token.");
+    return;
+  }
+
+  const message = await generateENS(name, token);
+  context.send(message);
+}
 
 export async function handleCheck(context: HandlerContext) {
   const {

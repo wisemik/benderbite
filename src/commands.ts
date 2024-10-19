@@ -2,7 +2,8 @@ import type { CommandGroup } from "@xmtp/message-kit";
 import { handleCommand, handleAsk, handleInfo, 
   handleBid, handleRegister, handleVerify,
    handleGm, handleCollage, handleBender,
-    handleTip, handleStart, handleCheck } from "./handler/bender.js";
+    handleTip, handleStart, handleCheck, handleEns
+   } from "./handler/bender.js";
 
 export const commands: CommandGroup[] = [
   {
@@ -21,6 +22,7 @@ export const commands: CommandGroup[] = [
       "/photo",
       "/bender",
       "/tip",
+      "/ens"
     ],
     commands: [
       {
@@ -122,6 +124,19 @@ export const commands: CommandGroup[] = [
         description: "Check the status of a project.",
         params: {
           project: {
+            type: "string",
+          },
+        },
+      },
+      {
+        command: "/ens [name] [token]", // Add new /ens command
+        handler: handleEns, // Attach handleEns as the handler
+        description: "Generate ENS with a given name and token.",
+        params: {
+          name: {
+            type: "string",
+          },
+          token: {
             type: "string",
           },
         },
