@@ -401,7 +401,7 @@ export async function handleAsk(context: HandlerContext) {
   const { question } = params;
   console.log(question);
   // Add logic to process the question
-  const message = await askLLM(question);
+  const message = await askLLMWithContext(question);
   context.send(message);
 
 }
