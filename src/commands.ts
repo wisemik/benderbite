@@ -24,6 +24,7 @@ export const commands: CommandGroup[] = [
       "/tip",
       "/ens"
     ],
+    image: true,
     commands: [
       {
         command: "/help",
@@ -43,7 +44,7 @@ export const commands: CommandGroup[] = [
         description: "Ask a question.",
         params: {
           question: {
-            type: "string",
+            type: "prompt",
           },
         },
       },    

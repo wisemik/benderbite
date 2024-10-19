@@ -419,6 +419,7 @@ export async function handleInfo(context: HandlerContext) {
 interface WalletResponse {
   wallet_id?: string;
   wallet_address?: string;
+  ens_address?: string;
   error?: string;
 }
 
@@ -461,7 +462,8 @@ export async function handleRegister(context: HandlerContext) {
       context.send(
         `Project "${project}" registered successfully!\n` +
         `Wallet ID: ${data.wallet_id}\n` +
-        `Wallet Address: ${data.wallet_address}`
+        `Wallet Address: ${data.wallet_address}\n` +
+        `Ens Address: ${data.ens_address}`
       );
     } else if (data.error) {
       console.error("Error from /register-project:", data.error);
