@@ -115,7 +115,7 @@ export async function handleCommand(context: HandlerContext) {
       content: { command },
     },
   } = context;
-
+    
   switch (command) {
     case "ask":
       return handleAsk(context);
@@ -150,8 +150,8 @@ export async function handleCommand(context: HandlerContext) {
     case "collage":
       return handleCollage(context);
 
-    case "bender":
-      return handleBender(context);
+    case "friend":
+      return handleFriend(context);
 
     case "tip":
       return handleTip(context);
@@ -285,6 +285,8 @@ export async function handleVerify(context: HandlerContext) {
 }
 
 export async function benderAgent(context: HandlerContext) {
+  console.log("benderAgent called with context:", context);
+
   if (!process?.env?.OPEN_AI_API_KEY) {
     console.log("No OPEN_AI_API_KEY found in .env");
     return;
@@ -297,15 +299,26 @@ export async function benderAgent(context: HandlerContext) {
     },
   } = context;
 
+  console.log("Message content:", content);
+  console.log("Message params:", params);
+  console.log("Sender address:", sender.address);
+
   const systemPrompt = generateSystemPrompt(context);
+  console.log("Generated system prompt:", systemPrompt);
+
   try {
     let userPrompt = params?.prompt ?? content;
+    console.log("User prompt:", userPrompt);
 
     const { reply, history } = await textGeneration(
       userPrompt,
       systemPrompt,
       chatHistories[sender.address]
     );
+
+    console.log("Reply from textGeneration:", reply);
+    console.log("Updated chat history:", history);
+
     chatHistories[sender.address] = history; // Update chat history for the user
 
     const messages = reply
@@ -313,11 +326,20 @@ export async function benderAgent(context: HandlerContext) {
       .filter((message) => message.trim() !== "");
 
     for (const message of messages) {
+      console.log("Processing message:", message);
+
       if (message.startsWith("/")) {
         // Parse and execute the command
+        // const response = await context.intent(message);
+
         const response = await context.intent(message);
+        console.log("Response :", response);
+
         await context.send((response as ApiResponse)?.message);
+
+
       } else {
+        
         // Send the message as a text response
         await context.send(message);
       }
@@ -330,44 +352,49 @@ export async function benderAgent(context: HandlerContext) {
 
 function generateSystemPrompt(context: HandlerContext) {
   const systemPrompt = `
-    You are a helpful and playful ens domain register bot that lives inside a web3 messaging app.\n
-    - Only provide answers based on verified information.
-    - Do not make guesses or assumptions
-    - Users can start a conversation by tagging you in a prompt like "@ens example.eth" or chatting 1:1
+    You are a helpful assistant that converts user input into the appropriate command(s) from the list below.
+
+    - Only provide answers by responding with the appropriate command(s) from the list below.
+    - Do not provide additional explanations or messages outside of the commands.
+    - Users can start a conversation by chatting 1:1.
     - You can respond with multiple messages if needed. Each message should be separated by a newline character.
     - You can execute commands by sending the command as a message.
 
-    ## Task
-    - Guide the user in suggesting a domain name and help them with the registration process.  You can trigger commands by only sending the command as a message.
-    - To trigger registration mini-app: "/register [domain]".
-    - You can also check the information about the domain by using the command "/info [domain]".
-    - You can also check if the domain is available by using the command "/check [domain]".
-
     ## Commands
     - /help: Show the list of commands
-    - /check [domain]: Check if a domain is available
-    - /register [domain]: Register a domain
+    - /ask [question]: Ask info about a hackathon
+    - /register [project_name]: Register a project for a hackathon
+    - /friend: Find a friend
+    - /gm: Get a good morning message
 
-    Format examples:
-    /register vitalik.eth 
-    /check vitalik.eth
-    /info vitalik.eth
-    /help
-  .`;
-
+    ## Examples
+    - User says: "Register my project named BenderBite"
+      Assistant responds: "/register BenderBite"
+    - User says: "I need a friend."
+      Assistant responds:
+      /friend
+    - User says: "What's the schedule for the hackathon?"
+      Assistant responds: "/ask What's the schedule for the hackathon?"
+  `;
   return systemPrompt;
 }
 
+
+
 export async function handleHelp(context: HandlerContext) {
-  context.send(
-    "Here is the list of commands:\n/register [domain]: Register a domain.\n/info [domain]: Get information about a domain.\n/check [domain]: Check if a domain is available.\n/help: Show the list of commands"
-  );
+  const message = "Here is the list of commands:\n/register [project]: Register a project.\n/friend Find a friend.\n/ask [question]: ask questions about hackathon.\n/help: Show the list of commands";
+
+  context.send(message);
+  
+  return { code: 200, message };
+
 }
 
 export async function handleStart(context: HandlerContext) {
   // Implement the logic for the /start command
-  context.send("Welcome! Please provide your wallet address to start.");
+  context.send("Welcome!");
 }
+
 
 export async function handleAsk(context: HandlerContext) {
   const {
@@ -495,10 +522,52 @@ export async function handleCollage(context: HandlerContext) {
   context.send("Generating a photo collage...");
 }
 
-export async function handleBender(context: HandlerContext) {
-  // Implement the logic for bending something
-  context.send("Bending in progress...");
+// Define the Project interface
+interface Project {
+  name: string;
+  wallet_id: string;
+  wallet_address: string;
+  ens_address: string;
 }
+
+export async function handleFriend(context: HandlerContext) {
+  try {
+    // Fetch random project from the backend
+    const response = await fetch(`${BACKEND_URL}/random-project`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      console.error(`Error: ${response.statusText}`);
+      context.reply(`Error: ${response.statusText}`);
+      return;
+    }
+
+    // Parse the response and cast it to the Project interface
+    const project = (await response.json()) as Project;
+
+    if (project?.ens_address && project?.name) {
+      // Send the message with the project details
+      const message = `Meet ${project.ens_address} near the coffee station and discuss ${project.name} project. Have fun!`;
+      context.send(message);
+    } else {
+      console.error("Unexpected response format:", project);
+      context.reply("Error: Unexpected response format");
+    }
+  } catch (err) {
+    if (err instanceof Error) {
+      console.error("Request failed:", err.message);
+      context.reply(`Error: ${err.message}`);
+    } else {
+      console.error("Unknown error occurred:", err);
+      context.reply("Error: An unknown error occurred");
+    }
+  }
+}
+
 
 export async function handleTip(context: HandlerContext) {
   const {
@@ -514,3 +583,4 @@ export async function handleTip(context: HandlerContext) {
   }
   context.send(`Tip of ${amount} sent.`);
 }
+

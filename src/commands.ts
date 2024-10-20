@@ -1,7 +1,7 @@
 import type { CommandGroup } from "@xmtp/message-kit";
 import { handleCommand, handleAsk, handleInfo, 
   handleBid, handleRegister, handleVerify,
-   handleGm, handleCollage, handleBender,
+   handleGm, handleCollage, handleFriend,
     handleTip, handleStart, handleCheck, handleEns
    } from "./handler/bender.js";
 
@@ -20,7 +20,7 @@ export const commands: CommandGroup[] = [
       "/bid",
       "/gm",
       "/photo",
-      "/bender",
+      "/friend",
       "/tip",
       "/ens"
     ],
@@ -104,9 +104,9 @@ export const commands: CommandGroup[] = [
         params: {},
       },
       {
-        command: "/bender",
-        handler: handleBender, // Add appropriate handler
-        description: "Bend something.",
+        command: "/friend",
+        handler: handleFriend, // Add appropriate handler
+        description: "Find a friend.",
         params: {},
       },
       {
