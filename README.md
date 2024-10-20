@@ -1,7 +1,2 @@
-# ens-domain-bot
-
-Message or add `ensbot.converse.xyz`
-
----
-
-Made with ❤️ by [Ephemera](https://ephemerahq.com).
+Backend: https://github.com/wisemik/benderbite-backend.git
+Leaderboard: https://github.com/wisemik/benderbite-leaderboard.git
